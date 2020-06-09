@@ -1,7 +1,5 @@
 # GitHub Action - Hexo CI/CD 🌱
 
-# Hexo Deploy Action
-
 
 This [GitHub action](https://github.com/features/actions) will handle the building and deploying process of hexo project.
 
