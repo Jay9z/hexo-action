@@ -1,29 +1,80 @@
-#!/bin/sh
+#!/bin/sh -l
 
 set -e
 
-# setup ssh-private-key
-mkdir -p /root/.ssh/
-echo "$INPUT_DEPLOY_KEY" > /root/.ssh/id_rsa
-chmod 600 /root/.ssh/id_rsa
-ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts
-
-# setup deploy git account
-git config --global user.name "$INPUT_USER_NAME"
-git config --global user.email "$INPUT_USER_EMAIL"
-
-# install hexo env
-npm install hexo-cli -g
-npm install hexo-deployer-git --save
-
-git clone https://github.com/$GITHUB_ACTOR/$GITHUB_ACTOR.github.io.git .deploy_git
-
-# deployment
-if [ "$INPUT_COMMIT_MSG" == "" ]
-then
-    hexo g -d
+# check values
+if [ -n "${PUBLISH_REPOSITORY}" ]; then
+    PRO_REPOSITORY=${PUBLISH_REPOSITORY}
 else
-    hexo g -d -m "$INPUT_COMMIT_MSG"
+    PRO_REPOSITORY=${GITHUB_REPOSITORY}
 fi
 
-echo ::set-output name=notify::"Deploy complate."
+if [ -z "$PUBLISH_DIR" ]
+then
+  echo "You must provide the action with the folder path in the repository where your compiled page generate at, example public."
+  exit 1
+fi
+
+if [ -z "$BRANCH" ]
+then
+  echo "You must provide the action with a branch name it should deploy to, for example master."
+  exit 1
+fi
+
+if [ -z "$PERSONAL_TOKEN" ]
+then
+  echo "You must provide the action with either a Personal Access Token or the GitHub Token secret in order to deploy."
+  exit 1
+fi
+
+REPOSITORY_PATH="https://x-access-token:${PERSONAL_TOKEN}@github.com/${PRO_REPOSITORY}.git"
+
+# deploy to 
+echo "Deploy to ${PRO_REPOSITORY}"
+
+# Installs Git and jq.
+apt-get update && \
+apt-get install -y git && \
+
+# Directs the action to the the Github workspace.
+cd $GITHUB_WORKSPACE 
+
+echo "npm install ..." 
+npm install
+
+
+echo "Clean folder ..."
+./node_modules/hexo/bin/hexo clean
+
+echo "Generate file ..."
+./node_modules/hexo/bin/hexo generate 
+
+cd $PUBLISH_DIR
+
+echo "Config git ..."
+
+# Configures Git.
+git init
+git config user.name "${GITHUB_ACTOR}"
+git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+git remote add origin "${REPOSITORY_PATH}"
+
+# Checks to see if the remote exists prior to deploying.
+# If the branch doesn't exist it gets created here as an orphan.
+# if [ "$(git ls-remote --heads "$REPOSITORY_PATH" "$BRANCH" | wc -l)" -eq 0 ];
+# then
+#   echo "Creating remote branch ${BRANCH} as it doesn't exist..."
+#   git checkout --orphan $BRANCH
+# fi
+
+git checkout --orphan $BRANCH
+
+git add --all
+
+echo 'Start Commit'
+git commit --allow-empty -m "Deploying to ${BRANCH}"
+
+echo 'Start Push'
+git push origin "${BRANCH}" --force
+
+echo "Deployment succesful!"
