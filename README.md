@@ -21,7 +21,7 @@ jobs:
       uses: renzhaosy/hexo-deploy-action@master
       env:
         PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        PUBLISH_REPOSITORY: renzhaosy/renzhaosy.github.io # The repository the action should deploy to.
+        PUBLISH_REPOSITORY: jay9z/jay9z.github.io # The repository the action should deploy to.
         BRANCH: master  # The branch the action should deploy to.
         PUBLISH_DIR: ./public # The folder the action should deploy.
 ```
