@@ -24,10 +24,7 @@ outputs:
 runs:
   using: 'docker'
   image: 'Dockerfile'
-  args:
-    - ${{ inputs.user_name }}
-    - ${{ inputs.user_email }}
-    - ${{ inputs.deploy_key }}
+
 branding:
   icon: 'package'  
   color: 'blue'
