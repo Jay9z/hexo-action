@@ -1,6 +1,6 @@
 # GitHub Action - Hexo CI/CD 🌱
 
-
+Orgin from smallblack, and hacked by Jay9z for auto action of private blog.
 This [GitHub action](https://github.com/features/actions) will handle the building and deploying process of hexo project.
 
 ## Getting Started
